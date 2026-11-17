@@ -1,0 +1,6 @@
+﻿
+.gitignore:33:# env files (can opt-in for committing if needed)
+.gitignore:34:.env*
+.gitignore:41:next-env.d.ts
+
+
