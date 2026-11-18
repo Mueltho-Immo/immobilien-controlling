@@ -1,3 +1,5 @@
+export const instant = false;
+
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -173,7 +175,7 @@ export default async function ImmobilieDetail(props: {
                       <span className="block text-sm text-gray-600">
                         {artLabel(e.unit_type)}
                         {e.area_sqm ? ` · ${e.area_sqm} m²` : ""}
-                      </span>
+                        </span>
                     </span>
                     <span className="text-sm text-gray-700">
                       {euro(e.target_rent)}

@@ -1,3 +1,5 @@
+export const instant = false;
+
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -57,13 +59,12 @@ export default async function Startseite() {
         >
           Dashboard und Rendite
         </Link>
-                <Link
+        <Link
           href="/mieten"
           className="block rounded-2xl bg-white shadow p-4 text-center font-medium text-gray-900"
         >
           Mieten und Zahlungen
         </Link>
-
 
         <section className="bg-white rounded-2xl shadow p-6">
           <div className="flex items-center justify-between mb-4">

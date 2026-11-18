@@ -1,3 +1,5 @@
+export const instant = false;
+
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -84,7 +86,7 @@ export default async function Belege() {
                         {groesse(b.size_bytes)}
                       </span>
                     </span>
-                                        <span className="flex items-center gap-3 whitespace-nowrap">
+                    <span className="flex items-center gap-3 whitespace-nowrap">
                       <span className="text-sm text-gray-700">
                         {b.status === "uploaded" ? "Neu" : b.status}
                       </span>
