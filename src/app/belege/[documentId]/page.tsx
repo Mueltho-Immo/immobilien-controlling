@@ -4,13 +4,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { buchungSpeichern } from "../actions";
+import { buchungStornieren, buchungReaktivieren } from "../storno";
 
 export default async function BelegBuchen(props: {
   params: Promise<{ documentId: string }>;
-  searchParams: Promise<{ fehler?: string }>;
+  searchParams: Promise<{ fehler?: string; ok?: string }>;
 }) {
   const { documentId } = await props.params;
-  const { fehler } = await props.searchParams;
+  const { fehler, ok } = await props.searchParams;
 
   const supabase = await createClient();
 
@@ -24,7 +25,9 @@ export default async function BelegBuchen(props: {
 
   const { data: vorhandeneBuchung } = await supabase
     .from("expenses")
-    .select("id, gross_amount, invoice_date, properties(name), expense_categories(name)")
+    .select(
+      "id, gross_amount, invoice_date, status, reversed_at, reversal_reason, properties(name), expense_categories(name)"
+    )
     .eq("document_id", beleg.id)
     .maybeSingle();
 
@@ -54,6 +57,12 @@ export default async function BelegBuchen(props: {
           </h1>
           <p className="text-sm text-gray-600 break-all">{beleg.original_name}</p>
         </header>
+
+        {ok && (
+          <p className="rounded-lg bg-green-50 text-green-800 text-sm p-3">
+            {ok === "1" ? "Buchung storniert." : "Storno rückgängig gemacht."}
+          </p>
+        )}
 
         {fehler && (
           <p className="rounded-lg bg-red-50 text-red-700 text-sm p-3">{fehler}</p>
@@ -87,7 +96,9 @@ export default async function BelegBuchen(props: {
             {vorhandeneBuchung ? (
               <div className="space-y-3">
                 <h2 className="text-lg font-medium text-gray-900">
-                  Bereits gebucht
+                  {vorhandeneBuchung.status === "reversed"
+                    ? "Buchung storniert"
+                    : "Bereits gebucht"}
                 </h2>
                 <p className="text-sm text-gray-700">
                   Objekt: {eins(vorhandeneBuchung.properties)?.name ?? "–"}
@@ -103,12 +114,65 @@ export default async function BelegBuchen(props: {
                     currency: "EUR",
                   })}
                 </p>
-                <Link
-                  href="/belege"
-                  className="inline-block rounded-lg bg-gray-900 text-white px-4 py-2 text-sm font-medium"
-                >
-                  Zur Belegliste
-                </Link>
+
+                {vorhandeneBuchung.status === "reversed" ? (
+                  <>
+                    <p className="text-sm text-gray-700">
+                      Storniert am{" "}
+                      {new Date(
+                        vorhandeneBuchung.reversed_at ?? ""
+                      ).toLocaleDateString("de-DE")}
+                      {vorhandeneBuchung.reversal_reason
+                        ? ` · Grund: ${vorhandeneBuchung.reversal_reason}`
+                        : ""}
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      Die Buchung zählt nicht mehr in Kosten und Dashboard. Der
+                      Beleg bleibt in der Liste sichtbar.
+                    </p>
+                    <form action={buchungReaktivieren}>
+                      <input type="hidden" name="document_id" value={beleg.id} />
+                      <input
+                        type="hidden"
+                        name="expense_id"
+                        value={vorhandeneBuchung.id}
+                      />
+                      <button className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-900">
+                        Storno rückgängig machen
+                      </button>
+                    </form>
+                  </>
+                ) : (
+                  <>
+                    <form action={buchungStornieren} className="space-y-3">
+                      <input type="hidden" name="document_id" value={beleg.id} />
+                      <input
+                        type="hidden"
+                        name="expense_id"
+                        value={vorhandeneBuchung.id}
+                      />
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Grund (optional)
+                        </label>
+                        <input
+                          name="reason"
+                          placeholder="z. B. doppelt erfasst"
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+                        />
+                      </div>
+                      <button className="rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white">
+                        Buchung stornieren
+                      </button>
+                    </form>
+                    <Link
+                      href="/belege"
+                      className="inline-block rounded-lg bg-gray-900 text-white px-4 py-2 text-sm font-medium"
+                    >
+                      Zur Belegliste
+                    </Link>
+                  </>
+                )}
               </div>
             ) : (
               <form action={buchungSpeichern} className="space-y-4">
