@@ -27,9 +27,9 @@ export async function buchungStornieren(formData: FormData) {
     .eq("id", expenseId)
     .maybeSingle();
 
-  if (!buchung) zurueck("Buchung nicht gefunden.");
-
-  if (buchung.status === "reversed") {
+  if (!buchung) {
+    zurueck("Buchung nicht gefunden.");
+  } else if (buchung.status === "reversed") {
     zurueck("Diese Buchung ist bereits storniert.");
   }
 
