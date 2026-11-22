@@ -65,6 +65,12 @@ export default async function Startseite() {
         >
           Mieten und Zahlungen
         </Link>
+        <Link
+          href="/dauerbuchungen"
+          className="block rounded-2xl bg-white shadow p-4 text-center font-medium text-gray-900"
+        >
+          Dauerbuchungen
+        </Link>
 
         <section className="bg-white rounded-2xl shadow p-6">
           <div className="flex items-center justify-between mb-4">
