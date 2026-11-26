@@ -40,6 +40,15 @@ function datum(text: string | null): string | null {
   return `${jahr}-${m.padStart(2, "0")}-${t.padStart(2, "0")}`;
 }
 
+/** Datum aus Azure: entweder valueDate (2026-11-09) oder Text. */
+function datumAusFeld(f: any): string | null {
+  if (!f) return null;
+  if (typeof f.valueDate === "string") return f.valueDate.slice(0, 10);
+  if (typeof f.valueString === "string") return datum(f.valueString);
+  if (typeof f.content === "string") return datum(f.content);
+  return null;
+}
+
 /** Kleiner für Azure: max. 2000 px, JPEG-Qualität 85. PDF bleibt unverändert. */
 async function fuerAzure(inhalt: ArrayBuffer, mime: string) {
   const puffer = Buffer.from(inhalt);
@@ -107,7 +116,6 @@ export async function belegErkennen(
     const felder = ergebnis?.analyzeResult?.documents?.[0]?.fields ?? {};
     const lief = feld(felder, "VendorName");
     const nr = feld(felder, "InvoiceId");
-    const dat = feld(felder, "InvoiceDate");
     const netto = feld(felder, "SubTotal");
     const steuer = feld(felder, "TotalTax");
     const brutto = feld(felder, "InvoiceTotal");
@@ -127,7 +135,7 @@ export async function belegErkennen(
     return {
       supplier: lief.wert,
       invoice_number: nr.wert,
-      invoice_date: datum(dat.wert),
+      invoice_date: datumAusFeld(felder.InvoiceDate),
       net_amount: zahl(netto.wert),
       vat_amount: zahl(steuer.wert),
       vat_rate: satz,
@@ -135,7 +143,7 @@ export async function belegErkennen(
       confidence: {
         supplier: lief.konfidenz,
         invoice_number: nr.konfidenz,
-        invoice_date: dat.konfidenz,
+        invoice_date: Number(felder.InvoiceDate?.confidence ?? 0),
         gross_amount: brutto.konfidenz,
       },
       rohtext,

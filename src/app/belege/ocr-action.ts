@@ -40,6 +40,8 @@ export async function belegAuslesen(formData: FormData) {
     );
   }
 
+  let ziel: string;
+
   try {
     const erkannt = await belegErkennen(await datei.arrayBuffer(), beleg.mime_type);
 
@@ -56,10 +58,12 @@ export async function belegAuslesen(formData: FormData) {
       .map(([name]) => name);
     if (unsicher.length) p.set("unsicher", unsicher.join(","));
 
-    revalidatePath(`/belege/${documentId}`);
-    redirect(`/belege/${documentId}?erkannt=1&${p.toString()}`);
+    ziel = `/belege/${documentId}?erkannt=1&${p.toString()}`;
   } catch (f) {
     const text = f instanceof Error ? f.message : "Unbekannter Fehler.";
-    redirect(`/belege/${documentId}?fehler=${encodeURIComponent(text)}`);
+    ziel = `/belege/${documentId}?fehler=${encodeURIComponent(text)}`;
   }
+
+  revalidatePath(`/belege/${documentId}`);
+  redirect(ziel);
 }
